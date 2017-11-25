@@ -4,6 +4,8 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, ro
 # import pymysql
 from subprocess import call
 from urlparse import urlparse
+import os
+import logging
 import socketio
 from socketio import Middleware
 import requests
@@ -169,7 +171,7 @@ if __name__ == '__main__':
     # deploy as an eventlet WSGI server
 	# eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app)
 	# eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
-	eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app)
-	eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
+	eventlet.wsgi.server(eventlet.listen(('10.194.23.92', 5355)), app)
+	eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('10.194.23.92', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
 	# sio.run(app, debug=True, host="0.0.0.0", port=5353)
 	# sio.run(app, debug=True, port=5353)
