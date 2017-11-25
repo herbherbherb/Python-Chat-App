@@ -19,7 +19,7 @@ sio = socketio.Server()
 # app = Flask(__name__)
 app.config[ 'SECRET_KEY' ] = 'jsbcfsbfjefebw237u3gdbdc'
 
-users = []
+users = {}
 connections = []
 dic = {}
 url = 'http://crow.cs.illinois.edu:5000/'
@@ -41,7 +41,7 @@ def on_connect(sid, environ):
 def on_disconnect(sid):
 	# username = data['username']
 	# domain = data['domain_name']
-	print(' left the game!')
+	print('left the game!')
 	# leave_room(domain)
 	# send(username + ' has left your domain', room=domain)
 	# sio.emit('leave domain', 'You left ' + domain + 'successfully!', room=sid)
@@ -74,10 +74,16 @@ def on_leave(sid, data):
 	# leave_room(domain)
 	# send(username + ' has left your domain', room=domain)
 	# sio.emit('leave domain', 'You left ' + domain + 'successfully!', room=sid)
-	for x in users:
-		if x == username:
-			users.remove(x)
-	sio.emit('get users', users, room=domain)
+	del users[sid]
+	del dic[sid]
+	roomuser = []
+	roomsid = []
+	for key in dic:
+		if dic[key] == domain:
+			roomsid.append(key)
+			roomuser.append(users[key])
+	for ssid in roomsid:
+		sio.emit('get users', roomuser, room=ssid)
 
 @sio.on( 'change domain' )
 def change_domain(sid, data): 
@@ -139,16 +145,22 @@ def send_message(sid, data):
 def new_user(sid, data):
 	currentsid = sid
 	username = data['username']	
-	users.append(username);
+	users[sid] = username;
 	domain = data['domain_name']
 	dic[sid] = domain
-	print(sid);
 	# join_room(domain)
 	# send(username + ' has entered your domain', room=domain)
 	# sio.emit('get users', users, room=domain)
+	roomuser = []
+	roomsid = []
+
 	for key in dic:
 		if dic[key] == domain:
-			sio.emit('get users', users, room=key)
+			roomsid.append(key)
+			roomuser.append(users[key])
+	for ssid in roomsid:
+		sio.emit('get users', roomuser, room=ssid)
+
 	# sio.emit('get users', users, room=sid)
 
 
