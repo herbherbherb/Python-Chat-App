@@ -6,7 +6,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, \
 from subprocess import call
 from urlparse import urlparse
 import requests
-import grequests
+# import grequests
 # https://flask-socketio.readthedocs.io/en/latest/
 # https://github.com/socketio/socket.io-client
 url = 'http://crow.cs.illinois.edu:5000/'
@@ -14,18 +14,37 @@ app = Flask(__name__)
 
 app.config[ 'SECRET_KEY' ] = 'jsbcfsbfjefebw237u3gdbdc'
 
-socketio = SocketIO( app )
+socketio = SocketIO( app, async_handlers=True)
+
 users = []
 connections = []
 dic = {}
-
 
 @app.route( '/' )
 def hello():
   return render_template( './ChatApp.html' )
 
-def messageRecived():
-  print( 'message was received!!!' )
+# @app.route('/', methods=['POST'])
+# def public_data():
+#     return flask.Response("foo" * 10, mimetype='text/plain')
+
+@socketio.on('connect')
+def on_connect():
+	print('Entered!!!')   
+	socketio.emit('hello', 'yes')
+
+@socketio.on('disconnect')
+def on_disconnect(data):
+	# username = data['username']
+	# domain = data['domain_name']
+	print(' left the game!')
+	# leave_room(domain)
+	# send(username + ' has left your domain', room=domain)
+	# emit('leave domain', 'You left ' + domain + 'successfully!', room=request.sid)
+	# for x in users:
+	# 	if x == username:
+	# 		users.remove(x)
+	# socketio.emit('get users', users, room=domain)
 
 @socketio.on( 'my event' )
 def handle_my_custom_event( json ):
@@ -46,13 +65,14 @@ def on_join(data):
 def on_leave(data):
 	username = data['username']
 	domain = data['domain_name']
+	print(username + ' left the game!')
 	# leave_room(domain)
 	# send(username + ' has left your domain', room=domain)
 	# emit('leave domain', 'You left ' + domain + 'successfully!', room=request.sid)
 	for x in users:
 		if x == username:
 			users.remove(x)
-	emit('get users', users, room=domain)
+	socketio.emit('get users', users, room=domain)
 
 @socketio.on( 'change domain' )
 def change_domain(data): 
@@ -105,17 +125,18 @@ def send_message(data):
 
 @socketio.on('new user')
 def new_user(data):
-	username = data['username']
+	username = data['username']	
 	users.append(username);
 	domain = data['domain_name']
 	dic[request.sid] = domain
-
+	print(request.sid);
 	join_room(domain)
 	send(username + ' has entered your domain', room=domain)
-	emit('get domains', domain, room=request.sid)
+	# emit('get domains', domain, room=request.sid)  don't need this anymore!!
 	emit('get users', users, room=domain)
+	emit('get users', users, room=request.sid)
 
 
 if __name__ == '__main__':
-	socketio.run(app, debug=True, host="0.0.0.0", port=5353)
-	# socketio.run(app, debug=True)
+	# socketio.run(app, debug=True, host="0.0.0.0", port=5353)
+	socketio.run(app, debug=True, port=5353)

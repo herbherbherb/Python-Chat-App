@@ -10,28 +10,28 @@
     body{
       margin-top: 30px;
     }
-    #messageArea{
-      display:none;
-    }
+   /* #messageArea{
+      display:;
+    }*/
   </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <div id="userFormArea", class="row">
-      <div class="col-md-12">
+<!--<div class="col-md-12">
         <form id = "userForm">
-          <div class="form-group">
-            <label>Enter UserName:</label>
-            <input class="form-control" id="username" />
-            <br />
-            <label>Enter Domain:</label>
-            <textarea class="form-control" id="domain"></textarea>
-            <br />
-            <input type="submit" class="btn btn-success" value="Login" /> 
-          </div>
-        </form>
+            <div class="form-group">
+              <label>Enter UserName:</label>
+              <input class="form-control" id="username" />
+              <br />
+              <label>Enter Domain:</label>
+              <textarea class="form-control" id="domain"></textarea>
+              <br />
+              <input type="submit" class="btn btn-success" value="Login" /> 
+            </div>
+          </form>
       </div>
-    </div>
+    </div> -->
     <div id="messageArea" class="row">
       <div class="col-md-4">
         <div class="well">
@@ -42,7 +42,24 @@
         </div>
       </div>
       <div class="col-md-8">
-        <div class="chat", id ="chat"></div>
+        <div class="well sidebar-nav">
+          <ul class="nav" id="chat" style="max-height: 40px; overflow-y:auto; list-style: none;">
+
+          </ul>
+        </div>
+
+          <form id = "userForm">
+            <div class="form-group">
+              <label>Enter UserName:</label>
+              <input class="form-control" id="username" />
+              <br />
+              <label>Enter Domain:</label>
+              <textarea class="form-control" id="domain"></textarea>
+              <br />
+              <input type="submit" class="btn btn-success" value="Login" /> 
+            </div>
+          </form>
+
           <form id ="messageForm">
             <div class="form-group">
               <label>Enter Query by Name:</label>
@@ -116,8 +133,6 @@
       $userForm.submit(function(e){
         e.preventDefault();
         socket.emit('new user', {username: $username.val(), domain_name: $domain.val()});
-        $userFormArea.hide();
-        $messageArea.show();
       });
 
       socket.on('new domain', function(data){
@@ -129,7 +144,8 @@
       });
 
       socket.on('new message', function(data){
-        $chat.append('<div class="well"><strong>'+data.users+'</strong>: '+data.msg+'</div>');
+        $chat.append('<li><strong>'+data.users+'</strong>: '+data.msg+'</li>');
+        $chat.animate({scrollTop: $('#chat').prop("scrollHeight")}, 500);
       });
 
     
