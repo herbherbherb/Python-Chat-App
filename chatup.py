@@ -95,7 +95,7 @@ def change_domain(sid, data):
 	olddomain = dic[sid]
 	dic[sid] = newdomain
 	leave_room(olddomain)
-	join_room(newdomain)
+	join_room(newdomain) 
 	send(username + ' has entered your domain', room=newdomain)
 	sio.emit('new domain', 'You entered ' + newdomain + ' successfully!', room=sid)
 
@@ -122,17 +122,24 @@ def calllib(domain, message):
 
 @sio.on('send message by desc')
 def send_message_by_desc(sid, data):
+	# username = data['username']
+	# message = data['message']
+	# message = urlparse(message)
+	# domain = dic[sid]
+	# payload_desc = {'url': domain, 'querydesc': message}
+	# response = 'the messgae you just sent is: ' + message
+	# sio.emit('new message', {'msg': response, 'users': username}, room=sid)
+	# r = requests.get(url, hooks={'response': print_url_desc}, params=payload_desc)
+	# for key in dic:
+	# 	if dic[key] == domain:
+	# 		sio.emit('new message', {'msg': r.text, 'users': username}, room=key)
 	username = data['username']
 	message = data['message']
-	message = urlparse(message)
 	domain = dic[sid]
-	payload_desc = {'url': domain, 'querydesc': message}
-	r = requests.get(url, hooks={'response': print_url_desc}, params=payload_desc)
-	for key in dic:
-		if dic[key] == domain:
-			sio.emit('new message', {'msg': r.text, 'users': username}, room=key)
+	response = 'the messgae you just sent is: ' + message
+	sio.emit('new message', {'msg': message, 'users': username}, room=sid)
+	sio.emit('new message', {'msg': response, 'users': 'system'}, room=sid)
 
-	# sio.emit('new message', {'msg': r.text, 'users': username}, room=domain)
 
 @sio.on('send message')
 def send_message(sid, data):
