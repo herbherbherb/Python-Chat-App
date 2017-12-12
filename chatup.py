@@ -3,7 +3,11 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, ro
 # from __future__ import print_function
 # import pymysql
 from subprocess import call
-from urlparse import urlparse
+# from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+     from urlparse import urlparse
 import os
 import logging
 import socketio
@@ -110,42 +114,36 @@ def calllib(domain, message):
 	r = requests.get(url, allow_redirects=False, hooks={'response': print_url}, params=payload)
 	return r
 
+@sio.on('send message by desc')
+def send_message_by_desc(sid, data):
+	username = data['username']
+	message = data['message']
+	message = urlparse(message)
+	domain = data['domain_name']
+	payload_desc = {'url': domain, 'querydesc': message}
+	r = requests.get(url, hooks={'response': print_url_desc}, params=payload_desc)
+	sio.emit('new message', {'msg': r.text, 'users': 'system'}, room=sid)
+	# for key in dic:
+	# 	if dic[key] == domain:
+	# 		sio.emit('new message', {'msg': r.text, 'users': username}, room=key)
+	
+
 # @sio.on('send message')
 # def send_message(sid, data):
 # 	username = data['username']
 # 	message = data['message']
 # 	message = urlparse(message)
+
 # 	domain = dic[sid]
 # 	payload = {'url': domain, 'query': message}
 # 	r = requests.get(url, hooks={'response': print_url}, params=payload)
 # 	sio.emit('new message', {'msg': r.text, 'users': username}, room=domain)
 
-@sio.on('send message by desc')
-def send_message_by_desc(sid, data):
-	# username = data['username']
-	# message = data['message']
-	# message = urlparse(message)
-	# domain = dic[sid]
-	# payload_desc = {'url': domain, 'querydesc': message}
-	# response = 'the messgae you just sent is: ' + message
-	# sio.emit('new message', {'msg': response, 'users': username}, room=sid)
-	# r = requests.get(url, hooks={'response': print_url_desc}, params=payload_desc)
-	# for key in dic:
-	# 	if dic[key] == domain:
-	# 		sio.emit('new message', {'msg': r.text, 'users': username}, room=key)
-	username = data['username']
-	message = data['message']
-	domain = dic[sid]
-	response = 'the messgae you just sent is: ' + message
-	sio.emit('new message', {'msg': message, 'users': username}, room=sid)
-	sio.emit('new message', {'msg': response, 'users': 'system'}, room=sid)
-
-
 @sio.on('send message')
 def send_message(sid, data):
 	username = data['username']
 	message = data['message']
-	domain = dic[sid]
+	domain = data['domain_name']
 	for key in dic:
 		if dic[key] == domain:
 			sio.emit('new message', {'msg': message, 'users': username}, room=key)
@@ -153,7 +151,8 @@ def send_message(sid, data):
 @sio.on('new user')
 def new_user(sid, data):
 	currentsid = sid
-	username = data['username']	
+	username = data['username']
+	print(username, "joined the chat!!!")	
 	users[sid] = username;
 	domain = data['domain_name']
 	dic[sid] = domain
