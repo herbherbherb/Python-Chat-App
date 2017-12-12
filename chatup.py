@@ -75,6 +75,7 @@ def on_join(sid, data):
 @sio.on('leave')	
 def on_leave(sid, data):
 	username = data['username']
+	print(data['domain_name'])
 	domain = data['domain_name']
 	print(username + ' left the game!')
 	# leave_room(domain)
