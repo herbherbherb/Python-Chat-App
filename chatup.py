@@ -2,6 +2,9 @@ from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect, send
 # from __future__ import print_function
 # import pymysql
+from flask_pymongo import PyMongo
+from pymongo import MongoClient
+import datetime
 from subprocess import call
 # from urlparse import urlparse
 try:
@@ -18,6 +21,12 @@ import eventlet.wsgi
 eventlet.monkey_patch()
 
 app = Flask(__name__)
+# client = MongoClient()
+# client = MongoClient('localhost', 27017)
+# db = client.test_database
+# query = db.query
+
+
 # sio = SocketIO( app, async_handlers=True)
 
 sio = socketio.Server()
@@ -28,6 +37,7 @@ app.config[ 'SECRET_KEY' ] = 'jsbcfsbfjefebw237u3gdbdc'
 users = {}
 connections = []
 dic = {}
+storage = {}
 url = 'http://crow.cs.illinois.edu:5000/'
 
 @app.route( '/' )
@@ -120,34 +130,43 @@ def send_message_by_desc(sid, data):
 	username = data['username']
 	message = data['message']
 	message = urlparse(message)
+	name = data['name']
 	domain = data['domain_name']
+
 	payload_desc = {'url': domain, 'querydesc': message}
 	r = requests.get(url, hooks={'response': print_url_desc}, params=payload_desc)
 	sio.emit('new message', {'msg': r.text, 'users': 'system'}, room=sid)
+
+	if name != '':
+		storage[name] = r.text
+		# post = {"name": , "text": "My first blog post!"}
+		# post_id = query.insert_one(post).inserted_id
+
 	# for key in dic:
 	# 	if dic[key] == domain:
 	# 		sio.emit('new message', {'msg': r.text, 'users': username}, room=key)
-	
-
-# @sio.on('send message')
-# def send_message(sid, data):
-# 	username = data['username']
-# 	message = data['message']
-# 	message = urlparse(message)
-
-# 	domain = dic[sid]
-# 	payload = {'url': domain, 'query': message}
-# 	r = requests.get(url, hooks={'response': print_url}, params=payload)
-# 	sio.emit('new message', {'msg': r.text, 'users': username}, room=domain)
 
 @sio.on('send message')
 def send_message(sid, data):
 	username = data['username']
 	message = data['message']
 	domain = data['domain_name']
-	for key in dic:
-		if dic[key] == domain:
-			sio.emit('new message', {'msg': message, 'users': username}, room=key)
+	if message in storage:
+		print("Has been stored before!!!")
+		sio.emit('new message', {'msg': storage[message], 'users': 'system'}, room=sid)
+	else:
+		payload = {'url': domain, 'query': message}
+		r = requests.get(url, hooks={'response': print_url}, params=payload)
+		sio.emit('new message', {'msg': r.text, 'users': 'system'}, room=sid)
+
+# @sio.on('send message')
+# def send_message(sid, data):
+# 	username = data['username']
+# 	message = data['message']
+# 	domain = data['domain_name']
+# 	for key in dic:
+# 		if dic[key] == domain:
+# 			sio.emit('new message', {'msg': message, 'users': username}, room=key)
 	
 @sio.on('new user')
 def new_user(sid, data):
@@ -176,9 +195,10 @@ def new_user(sid, data):
 if __name__ == '__main__':
 	app = socketio.Middleware(sio, app)
     # deploy as an eventlet WSGI server
-	# eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app)
-	# eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
-	eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app)
-	eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
+	eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app)
+	eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
+	# eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app)
+	# eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
 	# sio.run(app, debug=True, host="0.0.0.0", port=5353)
 	# sio.run(app, debug=True, port=5353)
+
