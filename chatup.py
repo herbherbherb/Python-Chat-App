@@ -22,11 +22,10 @@ eventlet.monkey_patch()
 
 app = Flask(__name__)
 # client = MongoClient()
-# client = MongoClient('localhost', 27017)
-# db = client.test_database
-# query = db.query
-
-
+client = MongoClient('localhost', 27017)
+db = client.test_database
+query = db.query
+query.remove();
 # sio = SocketIO( app, async_handlers=True)
 
 sio = socketio.Server()
@@ -102,6 +101,9 @@ def on_leave(sid, data):
 	for ssid in roomsid:
 		sio.emit('get users', roomuser, room=ssid)
 
+
+
+
 @sio.on( 'change domain' )
 def change_domain(sid, data): 
 	currentsid = sid
@@ -125,10 +127,28 @@ def calllib(domain, message):
 	r = requests.get(url, allow_redirects=False, hooks={'response': print_url}, params=payload)
 	return r
 
+@sio.on('pre check')
+def pre_check(sid, data):
+	url = data['domain_name']
+	cursor = query.find({'domain':url}, {'query_name':True, 'query_text':True, '_id':False})
+	print("result is: ")
+	output = []
+	while 1:
+		try:
+			record = cursor.next()
+			print("records")
+			output.append(record)
+		except StopIteration:
+			break
+   	sio.emit('feedback', {'output': output}, room=sid)
+
+
 @sio.on('send message by desc')
 def send_message_by_desc(sid, data):
 	username = data['username']
 	message = data['message']
+	old_message = data['message']
+	# print(old_message)
 	message = urlparse(message)
 	name = data['name']
 	domain = data['domain_name']
@@ -138,7 +158,9 @@ def send_message_by_desc(sid, data):
 	sio.emit('new message', {'msg': r.text, 'users': 'system'}, room=sid)
 
 	if name != '':
-		storage[name] = r.text
+		# storage[name] = r.text
+		post = {"domain": domain, "query_name": name, "query_text": old_message}
+		post_id = query.insert_one(post).inserted_id
 		# post = {"name": , "text": "My first blog post!"}
 		# post_id = query.insert_one(post).inserted_id
 
@@ -195,10 +217,10 @@ def new_user(sid, data):
 if __name__ == '__main__':
 	app = socketio.Middleware(sio, app)
     # deploy as an eventlet WSGI server
-	# eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app)
-	# eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
-	eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app)
-	eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app)
+	# eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app) # Localhost
+	# eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app) # Localhost
+	eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app) # kite Server
+	eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app) # Kite Server
 	# sio.run(app, debug=True, host="0.0.0.0", port=5353)
 	# sio.run(app, debug=True, port=5353)
 
