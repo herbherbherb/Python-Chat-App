@@ -17,8 +17,10 @@ import socketio
 from socketio import Middleware
 import requests
 import eventlet
+eventlet.sleep()
 import eventlet.wsgi
 eventlet.monkey_patch()
+eventlet.listen(("localhost", 5355))
 
 app = Flask(__name__)
 # client = MongoClient()
@@ -76,6 +78,8 @@ def on_join(sid, data):
 	currentsid = sid
 	username = data['username']
 	domain = data['domain_name']
+	users[sid] = username;
+	dic[sid] = domain
 	join_room(domain)
 	send(username + ' has entered your domain', room=domain)
 	sio.emit('enter domain', 'You entered ' + domain + 'successfully!', room=sid)
@@ -100,9 +104,6 @@ def on_leave(sid, data):
 			roomuser.append(users[key])
 	for ssid in roomsid:
 		sio.emit('get users', roomuser, room=ssid)
-
-
-
 
 @sio.on( 'change domain' )
 def change_domain(sid, data): 
@@ -129,14 +130,13 @@ def calllib(domain, message):
 
 @sio.on('pre check')
 def pre_check(sid, data):
+	print("Performing pre-check!!!!!!!!!")
 	url = data['domain_name']
 	cursor = query.find({'domain':url}, {'query_name':True, 'query_text':True, '_id':False})
-	print("result is: ")
 	output = []
 	while 1:
 		try:
 			record = cursor.next()
-			print("records")
 			output.append(record)
 		except StopIteration:
 			break
@@ -194,6 +194,7 @@ def send_message(sid, data):
 def new_user(sid, data):
 	currentsid = sid
 	username = data['username']
+	print("dsfasdfsadfasfdasfasfasdf")
 	print(username, "joined the chat!!!")	
 	users[sid] = username;
 	domain = data['domain_name']
