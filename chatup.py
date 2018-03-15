@@ -1,7 +1,6 @@
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect, send
 # from __future__ import print_function
-# import pymysql
 from flask_pymongo import PyMongo
 from pymongo import MongoClient
 import datetime
@@ -10,8 +9,9 @@ from subprocess import call
 try:
     from urllib.parse import urlparse
 except ImportError:
-     from urlparse import urlparse
+	from urlparse import urlparse
 import os
+import json
 import logging
 import socketio
 from socketio import Middleware
@@ -54,19 +54,6 @@ def on_connect(sid, environ):
 	print("connect ", sid) 
 	sio.emit('hello', 'yes')
 
-@sio.on('disconnect')
-def on_disconnect(sid):
-	# username = data['username']
-	# domain = data['domain_name']
-	print('left the game!')
-	# leave_room(domain)
-	# send(username + ' has left your domain', room=domain)
-	# sio.emit('leave domain', 'You left ' + domain + 'successfully!', room=sid)
-	# for x in users:
-	# 	if x == username:
-	# 		users.remove(x)
-	# sio.emit('get users', users, room=domain)
-
 @sio.on( 'my event' )
 def handle_my_custom_event(sid, json):
   print( 'recived my event: ' + str( json ) ) #user is the sid
@@ -87,23 +74,36 @@ def on_join(sid, data):
 
 @sio.on('leave')	
 def on_leave(sid, data):
-	username = data['username']
-	print(data['domain_name'])
+	print(data)
+	capa = data['capa']
 	domain = data['domain_name']
-	print(username + ' left the game!')
-	# leave_room(domain)
+	cursor = query.find({'domain':domain}, {'model_name':True, 'model_text':True, '_id':False})
+	name = "query" + str(cursor.count()+1)
+	output = []
+	while 1:
+		try:
+			record = cursor.next()
+			output.append(record)
+		except StopIteration:
+			break
+	print(output)
+	# capa = json.dumps(capa)
+	post = {"domain": domain, "model_name": name, "model_text": capa}
+	post_id = query.insert_one(post).inserted_id
+	print(post_id)
+
 	# send(username + ' has left your domain', room=domain)
 	# sio.emit('leave domain', 'You left ' + domain + 'successfully!', room=sid)
-	del users[sid]
-	del dic[sid]
-	roomuser = []
-	roomsid = []
-	for key in dic:
-		if dic[key] == domain:
-			roomsid.append(key)
-			roomuser.append(users[key])
-	for ssid in roomsid:
-		sio.emit('get users', roomuser, room=ssid)
+	# del users[sid]
+	# del dic[sid]
+	# roomuser = []
+	# roomsid = []
+	# for key in dic:
+	# 	if dic[key] == domain:
+	# 		roomsid.append(key)
+	# 		roomuser.append(users[key])
+	# for ssid in roomsid:
+	# 	sio.emit('get users', roomuser, room=ssid)
 
 @sio.on( 'change domain' )
 def change_domain(sid, data): 
@@ -130,9 +130,10 @@ def calllib(domain, message):
 
 @sio.on('pre check')
 def pre_check(sid, data):
-	print("Performing pre-check!!!!!!!!!")
+	print("Performing pre-check!!!!!!!")
 	url = data['domain_name']
-	cursor = query.find({'domain':url}, {'query_name':True, 'query_text':True, '_id':False})
+	# cursor = query.find({'domain':url}, {'query_name':True, 'query_text':True, '_id':False})
+	cursor = query.find({'domain':url}, {'model_name':True, 'model_text':True, '_id':False})
 	output = []
 	while 1:
 		try:
@@ -140,6 +141,7 @@ def pre_check(sid, data):
 			output.append(record)
 		except StopIteration:
 			break
+	print(output)
    	sio.emit('feedback', {'output': output}, room=sid)
 
 
@@ -161,8 +163,6 @@ def send_message_by_desc(sid, data):
 		# storage[name] = r.text
 		post = {"domain": domain, "query_name": name, "query_text": old_message}
 		post_id = query.insert_one(post).inserted_id
-		# post = {"name": , "text": "My first blog post!"}
-		# post_id = query.insert_one(post).inserted_id
 
 	# for key in dic:
 	# 	if dic[key] == domain:
