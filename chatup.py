@@ -139,7 +139,7 @@ def calllib(domain, message):
 
 @sio.on('pre check')
 def pre_check(sid, data):
-    print("Performing pre-check!!!!!!!")
+   print("Performing pre-check!!!!!!!")
     url = data['domain_name']
     # cursor = query.find({'domain':url}, {'query_name':True, 'query_text':True, '_id':False})
     cursor = query.find({'domain':url}, {'model_name':True, 'model_text':True, '_id':False, 'count': True})
@@ -151,9 +151,9 @@ def pre_check(sid, data):
         except StopIteration:
             break
     print(type(output))
-    newlist = sorted(output, key=lambda k: k['count']) 
+    newlist = sorted(output, key=lambda k: k['count'], reverse=True) 
     if len(newlist) > 4:
-        sio.emit('feedback', {'output': newlist[-4:-1]}, room=sid)
+        sio.emit('feedback', {'output': newlist[0:4]}, room=sid)
     else: 
         sio.emit('feedback', {'output': newlist}, room=sid)
 
