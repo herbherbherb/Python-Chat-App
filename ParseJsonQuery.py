@@ -61,14 +61,44 @@ if __name__ == "__main__":
         "fields": [
 
             {
-                "Field_id": "Laptop Title ",
+                "Field_id": "AA",
                 "match" : {
                 "type" : "text",
-                "minTextLength" : 80,
-                "maxTextLength" : 100,
-                "tagName" : "h2"
+                "TextLength" : {"lt":100,"gt":80},               
+                "tagName"   : "H2"
+                }
+            },
+
+            {
+                "Field_id": "BB",
+                "match" : {
+                "type" : "text",
+                "TextLength" : {"lt":20, "gt":2},               
+                "tagName" : "SPAN"
+                }
+            },
+
+            {
+                "Field_id": "CC",
+                "match" : {
+                "type" : "text",
+                "TextLength" : {"lt":250,"gt":50},                
+                "tagName"   : "H2"
+                }
+            },
+
+            {
+                "Field_id": "DD",
+                "match" : {
+                "type" : "text",
+                "TextLength" : {"lt":250,"gt":50},                
+                "tagName"   : "H3"
                 }
             }
+
+
+
+
     ]
    },
 
@@ -77,7 +107,8 @@ if __name__ == "__main__":
 
     }
 
-}"""
+}
+"""
 
     pq = ParseJsonQuery(query)
     pq.ParseInpString()
