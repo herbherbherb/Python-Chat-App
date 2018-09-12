@@ -258,14 +258,9 @@ def new_user(sid, data):
 if __name__ == '__main__':
     app = socketio.Middleware(sio, app)
     # deploy as an eventlet WSGI server
+
+    # eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app) # Localhost
+    # eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app) # Localhost
     
-
-
-    eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5353)), app) # Localhost
-    eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('127.0.0.1', 5353)), certfile='cert.crt',keyfile='private.key',server_side=True), app) # Localhost
-    
-
-
-
-    # eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app) # kite Server
-    # eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app) # Kite Server
+    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5355)), app) # kite Server
+    eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen(('0.0.0.0', 5355)), certfile='cert.crt',keyfile='private.key',server_side=True), app) # Kite Server
