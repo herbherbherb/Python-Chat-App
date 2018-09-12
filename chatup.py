@@ -1,7 +1,6 @@
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect, send
 # from __future__ import print_function
-from flask_pymongo import PyMongo
 from pymongo import MongoClient
 import datetime
 from subprocess import call
